@@ -15,7 +15,7 @@ function Sidebar() {
     return (
         <aside className="pl-4">
             <nav className="flex flex-col gap-6 text-gray-600 font-semibold">
-                <Link href='' className="flex gap-2 pb-6 items-center"><img src={userImgSrc}
+                <Link href={'/profile?id='+ user?.id } className="flex gap-2 pb-6 items-center"><img src={userImgSrc}
                     alt="imagem do perfil"
                     className="w-8 h-8 rounded-full"
                 /><span>{user?.username}</span></Link>

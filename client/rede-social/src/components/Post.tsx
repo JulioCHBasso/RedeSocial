@@ -1,3 +1,5 @@
+'use client'
+
 import { useContext, useState, } from "react";
 import { FaThumbsUp, FaRegComment, FaPaperPlane } from "react-icons/fa";
 import moment from "moment";
@@ -12,7 +14,8 @@ interface IPost {
     img: string,
     username: string,
     user_img: string,
-    created_at: string
+    created_at: string,
+    userId: number
 }
 
 interface IComments {
@@ -32,7 +35,7 @@ interface ILikes {
 }
 
 function Post(props: { post: IPost }) {
-    const { post_desc, img, username, user_img, created_at, id } = props.post
+    const { post_desc, img, username, user_img, created_at, id, userId } = props.post
     const { user } = useContext(UserContext);
     const queryClient = useQueryClient();
     const [comment_desc, setComment_desc] = useState('');
@@ -104,14 +107,16 @@ function Post(props: { post: IPost }) {
     }
     const userImgSrc = user?.user_img ?? "https://img.freepik.com/free-icon/user_318-159711.jpg";
     return (
-        <div className="w-1/3 bg-white wounded-lg p-4 shadow-md">
+        <div className="w-full bg-white wounded-lg p-4 shadow-md">
             <header className="flex gap-2 pb-4 border-2 items-center">
+                <Link href={'/profile?id=' +userId}>
                 <img className="w-8 h-8 rounded-full" src={user_img ? user_img : "https://img.freepik.com/free-icon/user_318-159711.jpg"}
                     alt="imagem do usuario que fez o post" />
                 <div className="flex flex-col">
                     <span className="font-semibold">{username}</span>
                     <span className="text-xs">{moment(created_at).fromNow()}</span>
                 </div>
+                </Link>
             </header>
             {post_desc && (
                 <div className="py-4 w-full">
