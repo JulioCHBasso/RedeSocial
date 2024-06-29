@@ -1,4 +1,4 @@
-import {db} from '../connect'
+import {db} from '../connect.js'
 export const getUser = (req,res)=>{
     const id = req.query.id
 

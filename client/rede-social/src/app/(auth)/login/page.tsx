@@ -28,7 +28,7 @@ function Login() {
 
         }).catch((err) => {
             console.log(err);
-            setError(err.response.msg);
+           
         });
     };
     return (
