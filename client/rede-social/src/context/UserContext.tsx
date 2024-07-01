@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useState } from "react";
+import { createContext, useContext, useState, useEffect } from 'react';
 
 interface ContextProps {
     children: React.ReactNode;
@@ -19,25 +19,35 @@ interface User {
     setUser: (newState: any) => void;
 };
 
-const intialValue = {
+interface UserContextType {
+    user: User | undefined;
+    setUser: (newState: User | undefined) => void;
+}
+
+const intialValue: UserContextType = {
     user: undefined,
     setUser: () => {},
 };
 
-export const UserContext = createContext<User>(intialValue)
+export const UserContext = createContext<UserContextType>(intialValue);
 
 export const UserContextProvider = ({ children }: ContextProps) => {
-    const UserJSON = localStorage.getItem('rede-social:user');
-    const [user, setUser] = useState(UserJSON ? JSON.parse(UserJSON) : intialValue.user
-    )
+    const [user, setUser] = useState<User | undefined>(intialValue.user);
+
+    useEffect(() => {
+        if (typeof window !== 'undefined') {
+            const UserJSON = localStorage.getItem('rede-social:user');
+            if (UserJSON) {
+                setUser(JSON.parse(UserJSON));
+            }
+        }
+    }, []);
 
     return (
-        <UserContext.Provider value={{
-            user,
-            setUser
-        }}>
+        <UserContext.Provider value={{ user, setUser }}>
             {children}
         </UserContext.Provider>
-
-    )
+    );
 };
+
+export const useUserContext = () => useContext(UserContext);

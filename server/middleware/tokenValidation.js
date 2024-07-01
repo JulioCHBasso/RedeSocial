@@ -1,20 +1,21 @@
-import jwt from "jsonwebtoken";
+import jwt from "jsonwebtoken"; // Importa a biblioteca jsonwebtoken para lidar com tokens JWT
 
-export const checkToken =(req, res, next)=>{
-    const authHeader = req.headers.cookie?.split("; ")[0];
-    const token =authHeader && authHeader.split("=")[1];
+// Middleware para verificar a validade do token de acesso
+export const checkToken = (req, res, next) => {
+    const authHeader = req.headers['authorization'];
+    const token = authHeader && authHeader.split(' ')[1];
 
-    if(token){
-        try{
-            jwt.verify(token, process.env.TOKEN);
-            next();
-        }catch(error){
-            console.debug(error);
-            res.status(400).json({msg: "Token invalidado"});
-        }
-    }else{
-        return res.status(401).json({msg:"acesso negado"});
+    if (!token) {
+        return res.status(401).json({ msg: "Acesso negado!" });
     }
 
+    jwt.verify(token, process.env.TOKEN, (err, user) => {
+        if (err) {
+            console.debug(err);
+            return res.status(403).json({ msg: "Token inválido!" });
+        }
 
-}
+        req.user = user;
+        next();
+    });
+};

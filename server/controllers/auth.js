@@ -5,7 +5,7 @@ import bcrypt from "bcrypt";
 
 
 export const register = (req, res) => {
-    const { username, email, password, confirmPassword } = req.body;
+    const { username, email, password, confirmPassword, perg } = req.body;
     if (!username) {
         return res.status(422.).json({ msg: "O nome é obrigatorio" });
     }
@@ -18,6 +18,9 @@ export const register = (req, res) => {
     if (password !== confirmPassword) {
         return res.status(422.).json({ msg: "As senhas não são iguais" });
     }
+   /* if (!perg) {
+        return res.status(422).json({ msg: "Tem que responder a pergunta Secreta" });
+    }*/
     db.query("SELECT email FROM user WHERE email = ?",
         [email],
         async (error, data) => {
@@ -28,9 +31,10 @@ export const register = (req, res) => {
             if (data.length > 0) {
                 return res.status(500).json({ msg: "Este email já esta sendo utilizado" });
             } else {
-                const passwordHash = await bcrypt.hash(password, 8)
+                const passwordHash = await bcrypt.hash(password, 8);
+                const passwordHash2 = await bcrypt.hash(perg, 8);
                 db.query(
-                    "INSERT INTO user SET?", { username, email, password: passwordHash },
+                    "INSERT INTO user SET ?", { username, email, password: passwordHash, perg: passwordHash2 },
                     (error) => {
                         if (error) {
                             console.debug(error);
@@ -40,7 +44,6 @@ export const register = (req, res) => {
                         }
                     }
                 )
-
             }
         })
 };
@@ -85,12 +88,11 @@ export const login = (req, res) => {
                         process.env.TOKEN,
                         { algorithm: "HS256" }
                     );
-                    delete user.password;
-                    res.cookie("accessToken",token,{
-                        httpOnly: true
-                    }).cookie("refreshToken",refreshToken,{
-                        httpOnly: true
-                    }).status(200).json({ msg: "Usuario logado com sucesso!", user })
+                    console.debug(token)
+                    
+                  res.status(200).json({msg:"Usuario logado com sucesso!", 
+                    data:{user, token:{token,refreshToken}}
+                })
                 } catch (err) {
                     console.debug(err);
                     return res.status(500).json({ msg: "Aconteceu algum erro no servidor, tente novamente mais tarde!!!" })
@@ -102,49 +104,50 @@ export const login = (req, res) => {
 
 };
 
-export const logout = (req,res)=>{
-    return res
-    .clearCookie("accessToken", { secure: true, sameSite: "none"})
-    .clearCookie("refreshToken", { secure: true, sameSite: "none"})
-    .status(200)
-    .json({msg: "Logout efetuado com sucesso"});
 
-
+export const logout = (req, res) => {
+    res.status(200).json({ msg: "Logout efetuado com sucesso" });
 };
 
- export const refresh =(req,res)=>{
-    const authHeader = req.headers.cookie?.split("; ")[1];
-    const refresh = authHeader&& authHeader.split('=')[1];
 
-    const tokenStruct = refresh.split('.')[1];
-    const payload = atob(tokenStruct);
 
-    try {
+export const refresh = async (req, res) => {
+    const { refreshToken } = req.body;
 
-        const refreshToken = jwt.sign({
-            exp: Math.floor(Date.now() / 1000) + 24 * 60 * 60,
-            id: JSON.parse(payload).id,
-        },
-            //node -e "console.log(require('crypto').randomBytes(256).toString('base64'));" 
-            //COMANDO PARA CRIAR A CHAVE DE CRIPTO GRAFIA 
-            process.env.REFRESH,
-            { algorithm: "HS256" }
-        )
-        const token = jwt.sign({
-            exp: Math.floor(Date.now() / 1000) + 3600,
-            id: JSON.parse(payload).id,
-        },
-            process.env.TOKEN,
-            { algorithm: "HS256" }
-        );
-        res.cookie("accessToken",token,{
-            httpOnly: true
-        }).cookie("refreshToken",refreshToken,{
-            httpOnly: true
-        }).status(200).json({ msg: "Token atualizado com sucesso",  })
-    } catch (err) {
-        console.debug(err);
-        return res.status(500).json({ msg: "Aconteceu algum erro no servidor, tente novamente mais tarde!!!" })
+    if (!refreshToken) {
+        return res.status(401).json({ msg: "Refresh token não fornecido!" });
     }
 
-}
+    try {
+        // Verifica o token de atualização
+        const decoded = jwt.verify(refreshToken, process.env.REFRESH);
+
+        // Gera novo token de acesso
+        const accessToken = jwt.sign({
+            id: decoded.id
+        },
+            process.env.TOKEN,
+            { expiresIn: '1h' } // Expira em 1 hora
+        );
+
+        // Gera novo token de atualização
+        const newRefreshToken = jwt.sign({
+            id: decoded.id
+        },
+            process.env.REFRESH,
+            { expiresIn: '24h' } // Expira em 24 horas
+        );
+
+        res.status(200).json({
+            msg: "Token atualizado com sucesso",
+            tokens: {
+                accessToken,
+                refreshToken: newRefreshToken
+            }
+        });
+
+    } catch (err) {
+        console.debug(err);
+        return res.status(403).json({ msg: "Refresh token inválido!" });
+    }
+};

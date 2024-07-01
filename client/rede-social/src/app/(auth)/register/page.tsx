@@ -10,13 +10,14 @@ function Register() {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
+    const [perg, setPerg] = useState('');
     const [error,setError] = useState('');
     const [success,setSuccess] = useState('');
 
 
     const handleRegister= (e:any) => {
         e.preventDefault();
-        makeRequest.post("auth/register", { username, email, password, confirmPassword }).then((res) => {
+        makeRequest.post("auth/register", { username, email, password, confirmPassword, perg }).then((res) => {
             console.log(res.data);
             setSuccess(res.data.msg);
             setError('');

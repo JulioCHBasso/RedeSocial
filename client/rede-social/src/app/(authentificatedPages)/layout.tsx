@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import Sidebar from "@/components/Sidebar";
 import Feed from "@/components/Feed";
 import { useQuery } from "@tanstack/react-query";
-import { makeRequest } from "../../axios";
+import { makeRequest } from "../../../axios"
 
 export default function MainHome() {
   const router = useRouter()
