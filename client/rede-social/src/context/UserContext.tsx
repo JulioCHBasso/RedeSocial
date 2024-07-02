@@ -1,47 +1,59 @@
 "use client";
+import { createContext, useState, ReactNode, useEffect } from "react";
 
-import { createContext, useContext, useState, useEffect } from 'react';
-
+// Definição das props do contexto
 interface ContextProps {
-    children: React.ReactNode;
+    children: ReactNode;
 }
 
-
+// Definição do usuário
 interface User {
-    user: | {
-        id: number;
-        email: string;
-        username: string;
-        user_img: string;
-        bg_img: string;
-    }
-    | undefined;
-    setUser: (newState: any) => void;
-};
+    id: number;
+    email: string;
+    username: string;
+    user_img: string;
+    bg_img: string;
+}
 
+// Definição do valor do contexto
 interface UserContextType {
     user: User | undefined;
     setUser: (newState: User | undefined) => void;
 }
 
-const intialValue: UserContextType = {
+// Valor inicial do contexto
+const initialValue: UserContextType = {
     user: undefined,
     setUser: () => {},
 };
 
-export const UserContext = createContext<UserContextType>(intialValue);
+// Criação do contexto
+export const UserContext = createContext<UserContextType>(initialValue);
 
+// Provedor do contexto
 export const UserContextProvider = ({ children }: ContextProps) => {
-    const [user, setUser] = useState<User | undefined>(intialValue.user);
-
-    useEffect(() => {
-        if (typeof window !== 'undefined') {
+    const [user, setUser] = useState<User | undefined>(() => {
+        if (typeof window !== "undefined") {
             const UserJSON = localStorage.getItem('rede-social:user');
             if (UserJSON) {
-                setUser(JSON.parse(UserJSON));
+                try {
+                    return JSON.parse(UserJSON);
+                } catch (error) {
+                    console.error("Erro ao parsear JSON:", error);
+                    return undefined;
+                }
             }
         }
-    }, []);
+        return initialValue.user;
+    });
+
+    useEffect(() => {
+        if (user) {
+            localStorage.setItem('rede-social:user', JSON.stringify(user));
+        } else {
+            localStorage.removeItem('rede-social:user');
+        }
+    }, [user]);
 
     return (
         <UserContext.Provider value={{ user, setUser }}>
@@ -49,5 +61,3 @@ export const UserContextProvider = ({ children }: ContextProps) => {
         </UserContext.Provider>
     );
 };
-
-export const useUserContext = () => useContext(UserContext);
