@@ -1,5 +1,4 @@
 "use client"
-
 import { useMutation } from "@tanstack/react-query";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -28,7 +27,9 @@ function Header() {
 
         setUser(undefined);
         localStorage.removeItem('rede-social:user');
-        router.push('login');
+        localStorage.removeItem("rede-social:token");
+        localStorage.removeItem("rede-social:refreshToken" );
+        router.push('/login');
     },
    });
 

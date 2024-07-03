@@ -16,6 +16,16 @@ interface IPost {
 }
 
 function Feed() {
+    const[posts, setPosts] = useState<IPost[] | undefined>(undefined);
+
+   /* useEffect(()=>{
+        makeRequest.get("post/").then((res)=>{
+            setPosts(res.data.das);        
+        }).catch({err}=>{
+            console.error(err);
+        );
+
+    }[])*/
 
     const { data, isLoading, error } = useQuery<IPost[] | undefined>({
         queryKey: ['posts'],
